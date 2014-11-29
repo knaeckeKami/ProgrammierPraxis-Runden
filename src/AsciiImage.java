@@ -1,4 +1,4 @@
-import java.util.Arrays;
+import java.util.*;
 
 
 /**
@@ -7,7 +7,7 @@ import java.util.Arrays;
 public class AsciiImage {
 
 
-    //the ascii image as one whole string without newline-characters
+    //the ascii image as one whole char[][] without newline-characters
     private char[][] asciiImage;
 
     /**
@@ -37,6 +37,13 @@ public class AsciiImage {
         }
         this.asciiImage = new char[width][height];
         clear();
+    }
+
+    public AsciiImage(AsciiImage img) {
+        this.asciiImage = img.asciiImage.clone();
+        for (int i = 0; i < asciiImage.length; i++) {
+            asciiImage[i] = img.asciiImage[i].clone();
+        }
     }
 
     public void clear() {
@@ -82,6 +89,10 @@ public class AsciiImage {
         return this.asciiImage[x][y];
     }
 
+    public char getPixel(AsciiPoint p) {
+        return this.getPixel(p.getX(), p.getY());
+    }
+
     /**
      * sets the character on position x/y.
      *
@@ -95,6 +106,30 @@ public class AsciiImage {
             throw new AsciiShop.AsciiShopException(AsciiShop.ERRORS.OPERATION_FAILED.toString());
         }
         this.asciiImage[x][y] = c;
+    }
+
+
+    public AsciiPoint getCentroid(char c) {
+        Collection<AsciiPoint> points = getPointList(c);
+
+        if (points.isEmpty()) {
+            return null;
+        }
+
+        int amountOfPixels = points.size();
+        double sumX = 0;
+        double sumY = 0;
+        for (AsciiPoint point : points) {
+            sumX += point.getX();
+            sumY += point.getY();
+        }
+        return new AsciiPoint((int) Math.round(sumX / amountOfPixels), (int) Math.round(sumY / amountOfPixels));
+
+    }
+
+
+    public void setPixel(AsciiPoint p, char c) {
+        this.setPixel(p.getX(), p.getY(), c);
     }
 
     private boolean isOutOfBoundaries(int x, int y) {
@@ -117,27 +152,17 @@ public class AsciiImage {
             //nothing to do
             return;
         }
-
-
         //save the old character for later
         char oldChar = this.getPixel(x, y);
         //replace the char on position x/y with the desired character
         this.setPixel(x, y, c);
-        //check left neighbour
-        if (x != 0 && getPixel(x - 1, y) == oldChar) {
-            fill(x - 1, y, c);
-        }
-        //check above neighbour
-        if (y != 0 && getPixel(x, y - 1) == oldChar) {
-            fill(x, y - 1, c);
-        }
-        //check right neighbour
-        if (x < this.getWidth() - 1 && getPixel(x + 1, y) == oldChar) {
-            fill(x + 1, y, c);
-        }
-        //check down neighbour
-        if (y < this.getHeight() - 1 && getPixel(x, y + 1) == oldChar) {
-            fill(x, y + 1, c);
+
+        //check all neighbours
+        Set<AsciiPoint> points = getNeighbors(x, y);
+        for (AsciiPoint point : points) {
+            if (getPixel(point) == oldChar) {
+                fill(point.getX(), point.getY(), c);
+            }
         }
 
     }
@@ -258,8 +283,55 @@ public class AsciiImage {
                 this.asciiImage[x][(int) Math.round(y)] = c;
 
         }
+    }
 
+    public ArrayList<AsciiPoint> getPointList(char c) {
+        ArrayList<AsciiPoint> pointList = new ArrayList<AsciiPoint>();
+        for (int x = 0; x < this.asciiImage.length; x++) {
+            for (int y = 0; y < this.asciiImage[x].length; y++) {
+                if (asciiImage[x][y] == c) {
+                    pointList.add(new AsciiPoint(x, y));
+                }
+            }
 
+        }
+        return pointList;
+    }
+
+    public Set<AsciiPoint> getNeighbors(int x, int y) {
+
+        Set<AsciiPoint> points = new HashSet<AsciiPoint>();
+
+        if (x != 0) {
+            points.add(new AsciiPoint(x - 1, y));
+        }
+        //check above neighbour
+        if (y != 0) {
+            points.add(new AsciiPoint(x, y - 1));
+        }
+        //check right neighbour
+        if (x < this.getWidth() - 1) {
+            points.add(new AsciiPoint(x + 1, y));
+        }
+        //check down neighbour
+        if (y < this.getHeight() - 1) {
+            points.add(new AsciiPoint(x, y + 1));
+        }
+        return points;
+    }
+
+    public Set<AsciiPoint> getNeighbors(AsciiPoint point) {
+        return getNeighbors(point.getX(), point.getY());
+    }
+
+    public void growRegion(char c) {
+        for (AsciiPoint point : getPointList(c)) {
+            for (AsciiPoint neighbour : getNeighbors(point)) {
+                if (getPixel(neighbour) == '.') {
+                    setPixel(neighbour, c);
+                }
+            }
+        }
     }
 
 

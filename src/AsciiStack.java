@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 /**
  * Created by mkamleithner on 11/29/14.
  */
@@ -14,6 +12,13 @@ public class AsciiStack {
         this.stack = new AsciiImage[increment];
     }
 
+    private static AsciiImage[] copyOf(AsciiImage[] array, int newLength) {
+        AsciiImage[] newArray = new AsciiImage[newLength];
+        System.arraycopy(array, 0, newArray, 0, Math.min(newLength, array.length));
+        return newArray;
+
+    }
+
     public int capacity() {
         return this.stack.length;
     }
@@ -26,6 +31,9 @@ public class AsciiStack {
         AsciiImage peeked = peek();
         if (peeked != null) {
             this.position--;
+            if (this.capacity() - this.size() > this.increment) {
+                this.stack = copyOf(this.stack, this.stack.length - increment);
+            }
         }
         return peeked;
     }
@@ -39,7 +47,7 @@ public class AsciiStack {
 
     public void push(AsciiImage img) {
         if (position >= stack.length - 1) {
-            this.stack = Arrays.copyOf(this.stack, this.stack.length + increment);
+            this.stack = copyOf(this.stack, this.stack.length + increment);
         }
         this.stack[++position] = img;
 

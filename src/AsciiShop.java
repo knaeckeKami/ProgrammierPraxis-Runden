@@ -5,18 +5,22 @@ import java.util.Scanner;
  */
 public class AsciiShop {
 
+    private static final int STACK_INCREMENT_SIZE = 3;
+
     public static void main(String[] args) {
 
         try {
             AsciiImage image;
+            AsciiStack stack = new AsciiStack(STACK_INCREMENT_SIZE);
             Scanner scanner = new Scanner(System.in);
 
 
-            AsciiImageCommandBuilder builder = new AsciiImageCommandBuilder();
+            AsciiImageCommandBuilder builder = new AsciiImageCommandBuilder(stack);
             AsciiImageOperation operation = builder.buildOperation(scanner);
             if (!(operation instanceof AsciiImageCreator)) {
                 throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
             }
+
 
             image = ((AsciiImageCreator) operation).performTask(null);
 
@@ -29,10 +33,17 @@ public class AsciiShop {
                     throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
 
+                if (operation.hasSideEffectsOnImage()) {
+                    stack.push(image);
+                    image = new AsciiImage(image);
+                }
                 //perform that operation on the image
                 Object operationResult = operation.performTask(image);
+                if (operationResult instanceof AsciiImage) {
+                    image = (AsciiImage) operationResult;
+                }
                 //if this operation had a result, save it
-                if (operationResult != null) {
+                else if (operationResult != null) {
                     System.out.println(operationResult);
                 }
             }
@@ -69,6 +80,9 @@ public class AsciiShop {
      * @param <T> Result of the operation. May be Void.
      */
     public static interface AsciiImageOperation<T> {
+
+        public boolean hasSideEffectsOnImage();
+
         public T performTask(AsciiImage image);
     }
 
@@ -77,6 +91,11 @@ public class AsciiShop {
      */
     public static class AsciiImageCommandBuilder {
 
+        private AsciiStack stack;
+
+        public AsciiImageCommandBuilder(AsciiStack stack) {
+            this.stack = stack;
+        }
 
         public AsciiImageOperation buildOperation(Scanner input) {
             String line = input.nextLine();
@@ -166,10 +185,60 @@ public class AsciiShop {
                     throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 return new AsciiSymmetryChecker();
-            } else throw new AsciiShopException(ERRORS.UNKNOWN_COMMAND.toString());
+            } else if ("undo".equals(token[0])) {
+                if (token.length != 1) {
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                }
+                return new AsciiUndoOperation(stack);
+            } else if ("grow".equals(token[0])) {
+                if (token.length != 2 && token[1].length() != 1) {
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                }
+                return new AsciiGrowOperation(token[1].charAt(0));
+            } else if ("centroid".equals(token[0])) {
+                if (token.length != 2 && token[1].length() != 1) {
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                }
+                return new AsciiCentroidOperation(token[1].charAt(0));
+            }
+            throw new AsciiShopException(ERRORS.UNKNOWN_COMMAND.toString());
         }
 
 
+        public static class AsciiGrowOperation implements AsciiImageOperation<Void> {
+
+            private char charToGrow;
+
+            public AsciiGrowOperation(char c) {
+                this.charToGrow = c;
+            }
+
+            public boolean hasSideEffectsOnImage() {
+                return true;
+            }
+
+            public Void performTask(AsciiImage image) {
+                image.growRegion(charToGrow);
+                return null;
+            }
+        }
+
+        public static class AsciiCentroidOperation implements AsciiImageOperation<AsciiPoint> {
+
+            private char characterToCalculateCentroidOf;
+
+            public AsciiCentroidOperation(char c) {
+                this.characterToCalculateCentroidOf = c;
+            }
+
+            public boolean hasSideEffectsOnImage() {
+                return false;
+            }
+
+            public AsciiPoint performTask(AsciiImage image) {
+                return image.getCentroid(characterToCalculateCentroidOf);
+            }
+        }
     }
 
     public static class AsciiImageCreator implements AsciiImageOperation<AsciiImage> {
@@ -188,6 +257,15 @@ public class AsciiShop {
             }
 
             return new AsciiImage(width, height);
+        }
+
+        /**
+         * is creates a new object, but does not touch an existing one -> no side effects
+         *
+         * @return
+         */
+        public boolean hasSideEffectsOnImage() {
+            return false;
         }
     }
 
@@ -227,6 +305,11 @@ public class AsciiShop {
 
             return null;
         }
+
+        public boolean hasSideEffectsOnImage() {
+            return true;
+        }
+
     }
 
     public static class AsciiClearTask implements AsciiImageOperation<Void> {
@@ -234,6 +317,11 @@ public class AsciiShop {
             image.clear();
             return null;
         }
+
+        public boolean hasSideEffectsOnImage() {
+            return true;
+        }
+
     }
 
     public static class AsciiPrintTask implements AsciiImageOperation<Void> {
@@ -241,6 +329,11 @@ public class AsciiShop {
             System.out.println(image.toString());
             return null;
         }
+
+        public boolean hasSideEffectsOnImage() {
+            return false;
+        }
+
     }
 
     public static class AsciiSymmetryChecker implements AsciiImageOperation<Boolean> {
@@ -248,6 +341,11 @@ public class AsciiShop {
         public Boolean performTask(AsciiImage image) {
             return image.isSymmetricHorizontal();
         }
+
+        public boolean hasSideEffectsOnImage() {
+            return false;
+        }
+
     }
 
     public static class AsciiImageFiller implements AsciiImageOperation<Void> {
@@ -267,6 +365,11 @@ public class AsciiShop {
             image.fill(x, y, character);
             return null;
         }
+
+        public boolean hasSideEffectsOnImage() {
+            return true;
+        }
+
     }
 
     public static class Transposer implements AsciiImageOperation<Void> {
@@ -276,6 +379,11 @@ public class AsciiShop {
             image.transpose();
             return null;
         }
+
+        public boolean hasSideEffectsOnImage() {
+            return true;
+        }
+
     }
 
     public static class AsciiReplaceOperation implements AsciiImageOperation<Void> {
@@ -287,11 +395,15 @@ public class AsciiShop {
             this.newChar = newChar;
         }
 
-        @Override
         public Void performTask(AsciiImage image) {
             image.replace(oldChar, newChar);
             return null;
         }
+
+        public boolean hasSideEffectsOnImage() {
+            return true;
+        }
+
     }
 
     public static class AsciiLineDrawer implements AsciiImageOperation<Void> {
@@ -307,10 +419,40 @@ public class AsciiShop {
             this.c = c;
         }
 
-        @Override
+
         public Void performTask(AsciiImage image) {
             image.drawLine(x0, y0, x1, y1, c);
             return null;
+        }
+
+        public boolean hasSideEffectsOnImage() {
+            return true;
+        }
+
+    }
+
+    public static class AsciiUndoOperation implements AsciiImageOperation<AsciiImage> {
+
+        private AsciiStack stack;
+
+        public AsciiUndoOperation(AsciiStack stack) {
+            this.stack = stack;
+        }
+
+        public boolean hasSideEffectsOnImage() {
+            return false;
+        }
+
+        public AsciiImage performTask(AsciiImage image) {
+            if (stack.empty()) {
+                System.out.println("STACK EMPTY");
+                return null;
+            } else {
+                AsciiImage poppedImage = stack.pop();
+                System.out.println("STACK USAGE " + stack.size() + "/" + stack.capacity());
+                return poppedImage;
+            }
+
         }
     }
 
