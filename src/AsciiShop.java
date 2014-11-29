@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -7,39 +5,33 @@ import java.util.Scanner;
  */
 public class AsciiShop {
 
-    /**
-     * generic error message
-     */
-    public static final String INPUT_ERROR = "INPUT MISMATCH";
-
     public static void main(String[] args) {
 
         try {
-            AsciiImage image = null;
+            AsciiImage image;
             Scanner scanner = new Scanner(System.in);
 
 
             AsciiImageCommandBuilder builder = new AsciiImageCommandBuilder();
             AsciiImageOperation operation = builder.buildOperation(scanner);
-            if(!(operation instanceof  AsciiImageCreator)){
-                throw new AsciiShopException(INPUT_ERROR);
+            if (!(operation instanceof AsciiImageCreator)) {
+                throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
             }
-            image = ((AsciiImageCreator)operation).performTask(null);
+
+            image = ((AsciiImageCreator) operation).performTask(null);
 
             //read lines until no more lines are available
             while (scanner.hasNextLine()) {
                 //build operation-object from input-command
                 operation = builder.buildOperation(scanner);
                 //image has already been created, must not be created again.
-                if(operation instanceof  AsciiImageCreator){
-                    throw new AsciiShopException(INPUT_ERROR);
+                if (operation instanceof AsciiImageCreator) {
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
 
                 //perform that operation on the image
                 Object operationResult = operation.performTask(image);
                 //if this operation had a result, save it
-
-
                 if (operationResult != null) {
                     System.out.println(operationResult);
                 }
@@ -48,6 +40,26 @@ public class AsciiShop {
         } catch (AsciiShopException ase) {
             //print error message
             System.out.println(ase.getMessage());
+        }
+    }
+
+    /**
+     * generic error messages
+     */
+    public enum ERRORS {
+
+        INPUT_ERROR("INPUT MISMATCH"),
+        UNKNOWN_COMMAND("UNKNOWN COMMAND"),
+        OPERATION_FAILED("OPERATION FAILED");
+
+        private String ERROR_NAME;
+
+        private ERRORS(String name) {
+            this.ERROR_NAME = name;
+        }
+
+        public String toString() {
+            return this.ERROR_NAME;
         }
     }
 
@@ -65,40 +77,40 @@ public class AsciiShop {
      */
     public static class AsciiImageCommandBuilder {
 
+
         public AsciiImageOperation buildOperation(Scanner input) {
             String line = input.nextLine();
             String[] token = line.split(" ");
-            if("create".equals(token[0])){
-                if(token.length != 3){
-                    throw new AsciiShopException(INPUT_ERROR);
+            if ("create".equals(token[0])) {
+                if (token.length != 3) {
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
                 int width, height;
-                width= Integer.parseInt(token[1]);
-                height= Integer.parseInt(token[2]);
-                return new AsciiImageCreator(width,height);
-            }
-            else if("load".equals(token[0])) {
-                if(token.length != 2){
-                    throw new AsciiShopException(INPUT_ERROR);
+                width = Integer.parseInt(token[1]);
+                height = Integer.parseInt(token[2]);
+                return new AsciiImageCreator(width, height);
+            } else if ("load".equals(token[0])) {
+                if (token.length != 2) {
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
                 return new AsciiImageLoader(token[1], input);
-            }else if("print".equals(token[0])){
+            } else if ("print".equals(token[0])) {
                 return new AsciiPrintTask();
-            }else if ("clear".equals(token[0])) {
+            } else if ("clear".equals(token[0])) {
                 return new AsciiClearTask();
-            }else if ("replace".equals(token[0])) {
-                if(token.length != 3 && (token[1].length() != 1  || token[2].length() != 1)){
-                    throw new AsciiShopException(INPUT_ERROR);
+            } else if ("replace".equals(token[0])) {
+                if (token.length != 3 && (token[1].length() != 1 || token[2].length() != 1)) {
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
                 char oldChar = token[1].charAt(0);
                 char newChar = token[2].charAt(0);
 
-                return new AsciiReplaceOperation(oldChar,newChar);
+                return new AsciiReplaceOperation(oldChar, newChar);
 
 
-            }else if("line".equals(token[0])){
-                if(token.length != 6){
-                    throw new AsciiShopException(INPUT_ERROR);
+            } else if ("line".equals(token[0])) {
+                if (token.length != 6) {
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
                 int x0, y0, x1, y1;
                 char c;
@@ -110,23 +122,23 @@ public class AsciiShop {
                     x1 = Integer.parseInt(token[3]);
                     y1 = Integer.parseInt(token[4]);
                 } catch (NumberFormatException nfe) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 //c must be exactly one character
                 if (token[5].length() != 1) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 c = token[5].charAt(0);
-                return new AsciiLineDrawer(x0,y0,x1,y1,c);
+                return new AsciiLineDrawer(x0, y0, x1, y1, c);
             }
             if ("transpose".equals(token[0])) {
                 if (token.length != 1) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 return new Transposer();
             } else if ("fill".equals(token[0])) {
                 if (token.length != 4) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 //parameters for the fill command
                 int x, y;
@@ -137,46 +149,45 @@ public class AsciiShop {
                     x = Integer.parseInt(token[1]);
                     y = Integer.parseInt(token[2]);
                 } catch (NumberFormatException nfe) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 //c must be exactly one character
                 if (token[3].length() != 1) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 c = token[3].charAt(0);
                 return new AsciiImageFiller(x, y, c);
             } else if ("symmetric-h".equals(token[0])) {
                 if (token.length != 1) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 return new AsciiSymmetryChecker();
-            } else throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+            } else throw new AsciiShopException(ERRORS.UNKNOWN_COMMAND.toString());
         }
 
 
     }
 
-    public static class AsciiImageCreator implements  AsciiImageOperation<AsciiImage> {
+    public static class AsciiImageCreator implements AsciiImageOperation<AsciiImage> {
 
         private final int width, height;
 
-        public AsciiImageCreator(int width, int height){
+        public AsciiImageCreator(int width, int height) {
             this.height = height;
             this.width = width;
         }
 
         public AsciiImage performTask(AsciiImage image) {
 
-            if(image != null){
+            if (image != null) {
                 return null;
             }
 
-            return new AsciiImage(width,height);
+            return new AsciiImage(width, height);
         }
     }
 
-    public static class AsciiImageLoader implements  AsciiImageOperation<AsciiImage> {
-
+    public static class AsciiImageLoader implements AsciiImageOperation<AsciiImage> {
 
 
         private final String eof;
@@ -194,11 +205,11 @@ public class AsciiShop {
 
             for (int i = 0; i < height; i++) {
                 if (!scanner.hasNextLine()) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
                 String line = scanner.nextLine();
                 if (line.length() != width) {
-                    throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
                 for (int j = 0; j < line.length(); j++) {
                     image.setPixel(j, i, line.charAt(j));
@@ -206,7 +217,7 @@ public class AsciiShop {
             }
 
             if (!scanner.hasNextLine() || !scanner.nextLine().equals(eof)) {
-                throw new AsciiShopException(AsciiShop.INPUT_ERROR);
+                throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
             }
 
 
@@ -214,22 +225,19 @@ public class AsciiShop {
         }
     }
 
-
-    public static class AsciiClearTask implements  AsciiImageOperation<Void> {
+    public static class AsciiClearTask implements AsciiImageOperation<Void> {
         public Void performTask(AsciiImage image) {
             image.clear();
             return null;
         }
     }
 
-    public static class AsciiPrintTask implements  AsciiImageOperation<Void> {
-        public  Void performTask(AsciiImage image) {
+    public static class AsciiPrintTask implements AsciiImageOperation<Void> {
+        public Void performTask(AsciiImage image) {
             System.out.println(image.toString());
             return null;
         }
     }
-
-
 
     public static class AsciiSymmetryChecker implements AsciiImageOperation<Boolean> {
 
@@ -251,25 +259,6 @@ public class AsciiShop {
             this.character = character;
         }
 
-        public AsciiImageFiller() {
-
-        }
-
-        public AsciiImageFiller setX(int x) {
-            this.x = x;
-            return this;
-        }
-
-        public AsciiImageFiller setY(int y) {
-            this.y = y;
-            return this;
-        }
-
-        public AsciiImageFiller setCharacter(char character) {
-            this.character = character;
-            return this;
-        }
-
         public Void performTask(AsciiImage image) {
             image.fill(x, y, character);
             return null;
@@ -285,12 +274,11 @@ public class AsciiShop {
         }
     }
 
-    public static class AsciiReplaceOperation implements  AsciiImageOperation<Void>{
+    public static class AsciiReplaceOperation implements AsciiImageOperation<Void> {
 
         char oldChar, newChar;
 
-        public AsciiReplaceOperation(char oldChar, char newChar)
-        {
+        public AsciiReplaceOperation(char oldChar, char newChar) {
             this.oldChar = oldChar;
             this.newChar = newChar;
         }
@@ -302,9 +290,9 @@ public class AsciiShop {
         }
     }
 
-    public static class AsciiLineDrawer implements  AsciiImageOperation<Void>{
+    public static class AsciiLineDrawer implements AsciiImageOperation<Void> {
 
-        private int x0, x1,y0,y1;
+        private int x0, x1, y0, y1;
         private char c;
 
         public AsciiLineDrawer(int x0, int y0, int x1, int y1, char c) {
@@ -317,11 +305,10 @@ public class AsciiShop {
 
         @Override
         public Void performTask(AsciiImage image) {
-            image.drawLine(x0, y0, x1,y1,c);
+            image.drawLine(x0, y0, x1, y1, c);
             return null;
         }
     }
-
 
     /**
      * own exception used for this project
