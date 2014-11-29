@@ -13,15 +13,12 @@ public class AsciiShop {
             AsciiImage image;
             AsciiStack stack = new AsciiStack(STACK_INCREMENT_SIZE);
             Scanner scanner = new Scanner(System.in);
-
-
             AsciiImageCommandBuilder builder = new AsciiImageCommandBuilder(stack);
+            //initialise the image
             AsciiImageOperation operation = builder.buildOperation(scanner);
             if (!(operation instanceof AsciiImageCreator)) {
                 throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
             }
-
-
             image = ((AsciiImageCreator) operation).performTask(null);
 
             //read lines until no more lines are available
@@ -30,7 +27,7 @@ public class AsciiShop {
                 operation = builder.buildOperation(scanner);
                 //image has already been created, must not be created again.
                 if (operation instanceof AsciiImageCreator) {
-                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
+                    throw new AsciiShopException(ERRORS.UNKNOWN_COMMAND.toString());
                 }
 
                 if (operation.hasSideEffectsOnImage()) {
@@ -43,7 +40,7 @@ public class AsciiShop {
                     image = (AsciiImage) operationResult;
                 }
                 //if this operation had a result, save it
-                else if (operationResult != null) {
+                else if (operation.hasResult()) {
                     System.out.println(operationResult);
                 }
             }
@@ -79,11 +76,29 @@ public class AsciiShop {
      *
      * @param <T> Result of the operation. May be Void.
      */
-    public static interface AsciiImageOperation<T> {
+    public static abstract class AsciiImageOperation<T> {
 
-        public boolean hasSideEffectsOnImage();
+        /**
+         * returns true, iff the state of the image is changed when performTask is called.
+         * returns false otherwise
+         *
+         * @return
+         */
+        public boolean hasSideEffectsOnImage() {
+            return true;
+        }
 
-        public T performTask(AsciiImage image);
+        /**
+         * performs an operation on the given image and returns a value (or null)
+         *
+         * @param image the image, on which the operation is performed. might be null on specific operations like image creation
+         * @return
+         */
+        public abstract T performTask(AsciiImage image);
+
+        public boolean hasResult() {
+            return !hasSideEffectsOnImage();
+        }
     }
 
     /**
@@ -91,6 +106,7 @@ public class AsciiShop {
      */
     public static class AsciiImageCommandBuilder {
 
+        //the stack needed for the undo operation
         private AsciiStack stack;
 
         public AsciiImageCommandBuilder(AsciiStack stack) {
@@ -201,47 +217,53 @@ public class AsciiShop {
                 }
                 return new AsciiCentroidOperation(token[1].charAt(0));
             }
+            //no valid command was given : throw an exception
             throw new AsciiShopException(ERRORS.UNKNOWN_COMMAND.toString());
         }
 
+    }
 
-        public static class AsciiGrowOperation implements AsciiImageOperation<Void> {
+    /**
+     * class used to implement the command to grow a region for a specific character
+     */
+    public static class AsciiGrowOperation extends AsciiImageOperation<Void> {
 
-            private char charToGrow;
+        private char charToGrow;
 
-            public AsciiGrowOperation(char c) {
-                this.charToGrow = c;
-            }
-
-            public boolean hasSideEffectsOnImage() {
-                return true;
-            }
-
-            public Void performTask(AsciiImage image) {
-                image.growRegion(charToGrow);
-                return null;
-            }
+        public AsciiGrowOperation(char c) {
+            this.charToGrow = c;
         }
 
-        public static class AsciiCentroidOperation implements AsciiImageOperation<AsciiPoint> {
-
-            private char characterToCalculateCentroidOf;
-
-            public AsciiCentroidOperation(char c) {
-                this.characterToCalculateCentroidOf = c;
-            }
-
-            public boolean hasSideEffectsOnImage() {
-                return false;
-            }
-
-            public AsciiPoint performTask(AsciiImage image) {
-                return image.getCentroid(characterToCalculateCentroidOf);
-            }
+        public Void performTask(AsciiImage image) {
+            image.growRegion(charToGrow);
+            return null;
         }
     }
 
-    public static class AsciiImageCreator implements AsciiImageOperation<AsciiImage> {
+    /**
+     * class used to implement the command to calculate the centroid of a character in an image
+     */
+    public static class AsciiCentroidOperation extends AsciiImageOperation<AsciiPoint> {
+
+        private char characterToCalculateCentroidOf;
+
+        public AsciiCentroidOperation(char c) {
+            this.characterToCalculateCentroidOf = c;
+        }
+
+        public boolean hasSideEffectsOnImage() {
+            return false;
+        }
+
+        public AsciiPoint performTask(AsciiImage image) {
+            return image.getCentroid(characterToCalculateCentroidOf);
+        }
+    }
+
+    /**
+     * class used to implement the command to create an image
+     */
+    public static class AsciiImageCreator extends AsciiImageOperation<AsciiImage> {
 
         private final int width, height;
 
@@ -269,7 +291,11 @@ public class AsciiShop {
         }
     }
 
-    public static class AsciiImageLoader implements AsciiImageOperation<Void> {
+    /**
+     * class used to implement the command to load the image
+     **/
+
+    public static class AsciiImageLoader extends AsciiImageOperation<Void> {
 
 
         private final String eof;
@@ -306,28 +332,25 @@ public class AsciiShop {
             return null;
         }
 
-        public boolean hasSideEffectsOnImage() {
-            return true;
-        }
-
     }
 
-    public static class AsciiClearTask implements AsciiImageOperation<Void> {
+    /**
+     * class used to implement the command to clear the image
+     */
+    public static class AsciiClearTask extends AsciiImageOperation<Void> {
         public Void performTask(AsciiImage image) {
             image.clear();
             return null;
         }
 
-        public boolean hasSideEffectsOnImage() {
-            return true;
-        }
-
     }
 
-    public static class AsciiPrintTask implements AsciiImageOperation<Void> {
-        public Void performTask(AsciiImage image) {
-            System.out.println(image.toString());
-            return null;
+    /**
+     * class used to implement the command to print the image
+     */
+    public static class AsciiPrintTask extends AsciiImageOperation<String> {
+        public String performTask(AsciiImage image) {
+            return image.toString();
         }
 
         public boolean hasSideEffectsOnImage() {
@@ -336,7 +359,11 @@ public class AsciiShop {
 
     }
 
-    public static class AsciiSymmetryChecker implements AsciiImageOperation<Boolean> {
+    /**
+     * class used to implement the command symmetric-h
+     */
+
+    public static class AsciiSymmetryChecker extends AsciiImageOperation<Boolean> {
 
         public Boolean performTask(AsciiImage image) {
             return image.isSymmetricHorizontal();
@@ -348,7 +375,10 @@ public class AsciiShop {
 
     }
 
-    public static class AsciiImageFiller implements AsciiImageOperation<Void> {
+    /**
+     * class used to implement the command to fill an image
+     */
+    public static class AsciiImageFiller extends AsciiImageOperation<Void> {
 
 
         private int x, y;
@@ -366,13 +396,13 @@ public class AsciiShop {
             return null;
         }
 
-        public boolean hasSideEffectsOnImage() {
-            return true;
-        }
 
     }
 
-    public static class Transposer implements AsciiImageOperation<Void> {
+    /**
+     * class used to implement the command to transpose an image
+     */
+    public static class Transposer extends AsciiImageOperation<Void> {
 
         public Void performTask(AsciiImage image) {
 
@@ -380,13 +410,12 @@ public class AsciiShop {
             return null;
         }
 
-        public boolean hasSideEffectsOnImage() {
-            return true;
-        }
-
     }
 
-    public static class AsciiReplaceOperation implements AsciiImageOperation<Void> {
+    /**
+     * class used to implement the command to replace a character
+     */
+    public static class AsciiReplaceOperation extends AsciiImageOperation<Void> {
 
         char oldChar, newChar;
 
@@ -400,13 +429,13 @@ public class AsciiShop {
             return null;
         }
 
-        public boolean hasSideEffectsOnImage() {
-            return true;
-        }
 
     }
 
-    public static class AsciiLineDrawer implements AsciiImageOperation<Void> {
+    /**
+     * class used to implement the command to draw a line
+     */
+    public static class AsciiLineDrawer extends AsciiImageOperation<Void> {
 
         private int x0, x1, y0, y1;
         private char c;
@@ -425,13 +454,12 @@ public class AsciiShop {
             return null;
         }
 
-        public boolean hasSideEffectsOnImage() {
-            return true;
-        }
-
     }
 
-    public static class AsciiUndoOperation implements AsciiImageOperation<AsciiImage> {
+    /**
+     * class to undo the previous operation. needs an asciistack on creation
+     */
+    public static class AsciiUndoOperation extends AsciiImageOperation<AsciiImage> {
 
         private AsciiStack stack;
 
@@ -443,6 +471,18 @@ public class AsciiShop {
             return false;
         }
 
+        @Override
+        public boolean hasResult() {
+            return false;
+        }
+
+        /**
+         *  UNDOs the previous operation. Iff no operation  can be undone, then null is returned an
+         *  "STACK EMPTY" is printed on System.out.
+         *  Otherwise, the state of the stack if printed (without the topmost image) and the topmost image is returned
+         * @param image must be null
+         * @return the last AsciiImage or null
+         */
         public AsciiImage performTask(AsciiImage image) {
             if (stack.empty()) {
                 System.out.println("STACK EMPTY");

@@ -7,6 +7,7 @@ import java.util.*;
 public class AsciiImage {
 
 
+    private static final char BACKGROUND_CHARACTER = '.';
     //the ascii image as one whole char[][] without newline-characters
     private char[][] asciiImage;
 
@@ -49,7 +50,7 @@ public class AsciiImage {
     public void clear() {
 
         for (char[] anAsciiImage : this.asciiImage) {
-            Arrays.fill(anAsciiImage, '.');
+            Arrays.fill(anAsciiImage, BACKGROUND_CHARACTER);
         }
 
     }
@@ -89,6 +90,12 @@ public class AsciiImage {
         return this.asciiImage[x][y];
     }
 
+    /**
+     * returns the character on the given point.
+     *
+     * @param p
+     * @return
+     */
     public char getPixel(AsciiPoint p) {
         return this.getPixel(p.getX(), p.getY());
     }
@@ -108,7 +115,9 @@ public class AsciiImage {
         this.asciiImage[x][y] = c;
     }
 
-
+    /**
+     * returns the centroid of the character c.
+     */
     public AsciiPoint getCentroid(char c) {
         Collection<AsciiPoint> points = getPointList(c);
 
@@ -235,7 +244,9 @@ public class AsciiImage {
         return true;
     }
 
-
+    /**
+     * replaces all occurrences  of oldChar with newChar
+     */
     public void replace(char oldChar, char newChar) {
         for (int i = 0; i < this.asciiImage.length; i++) {
             for (int j = 0; j < this.asciiImage[i].length; j++) {
@@ -246,6 +257,14 @@ public class AsciiImage {
         }
     }
 
+    /**
+     * draws a line of c-characters from x0/y0 to x1/y1 using the DDA algorithm
+     * @param x0 the x coordinate where to start
+     * @param y0 the y coordinate where to start
+     * @param x1 the x coordinate where to end
+     * @param y1 the y coordinate where to end
+     * @param c  the character of the line
+     */
     public void drawLine(int x0, int y0, int x1, int y1, char c) {
         boolean swapped = false;
         int help;
@@ -285,6 +304,9 @@ public class AsciiImage {
         }
     }
 
+    /**
+     * returns all points, which are set to c.
+     */
     public ArrayList<AsciiPoint> getPointList(char c) {
         ArrayList<AsciiPoint> pointList = new ArrayList<AsciiPoint>();
         for (int x = 0; x < this.asciiImage.length; x++) {
@@ -298,10 +320,16 @@ public class AsciiImage {
         return pointList;
     }
 
+    /**
+     * returns all neighbours of the point x/y
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @return Set containing all neighbours of x/y. can contain up to 4 elements. can be empty.
+     */
     public Set<AsciiPoint> getNeighbors(int x, int y) {
 
         Set<AsciiPoint> points = new HashSet<AsciiPoint>();
-
+        //check left neighbour
         if (x != 0) {
             points.add(new AsciiPoint(x - 1, y));
         }
@@ -320,14 +348,24 @@ public class AsciiImage {
         return points;
     }
 
+    /**
+     * returns all neighbours of the given point.
+     * @return Set containing all neighbours of the given point. can contain up to 4 elements. can be empty.
+     */
     public Set<AsciiPoint> getNeighbors(AsciiPoint point) {
         return getNeighbors(point.getX(), point.getY());
     }
 
+
+    /**
+     * grows the region of all points with the character c. All characters, which are neighbours of any point containing
+     * c, which are set to BACKGROUND_CHARACTER, will be set to c.
+     * @param c
+     */
     public void growRegion(char c) {
         for (AsciiPoint point : getPointList(c)) {
             for (AsciiPoint neighbour : getNeighbors(point)) {
-                if (getPixel(neighbour) == '.') {
+                if (getPixel(neighbour) == BACKGROUND_CHARACTER) {
                     setPixel(neighbour, c);
                 }
             }
