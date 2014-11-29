@@ -32,6 +32,9 @@ public class AsciiImage {
     }
 
     public AsciiImage(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            throw new AsciiShop.AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+        }
         this.asciiImage = new char[width][height];
         clear();
     }
@@ -56,10 +59,9 @@ public class AsciiImage {
         StringBuilder builder = new StringBuilder();
         this.transpose();
         for (char[] anAsciiImage : this.asciiImage) {
-            builder.append(anAsciiImage).append(System.lineSeparator());
+            builder.append(anAsciiImage).append(System.getProperty("line.separator"));
         }
-        //remove last \n
-        builder.deleteCharAt(builder.length() - 1);
+
         this.transpose();
         return builder.toString();
 
@@ -220,7 +222,6 @@ public class AsciiImage {
     }
 
     public void drawLine(int x0, int y0, int x1, int y1, char c) {
-        System.out.println("drawline " + x0 + " " + y0 + " " + x1 + " " + y1 + " " + c);
         boolean swapped = false;
         int help;
         int deltaX = x1 - x0;
@@ -250,7 +251,6 @@ public class AsciiImage {
 
         }
         double y = y0;
-        System.out.println("x0: " + x0 + " x1: " + x1 + " y0: " + y0 + " y1: " + y1);
         for (int x = x0; x <= x1; x++, y += (((double) deltaY) / deltaX)) {
             if (swapped) {
                 this.asciiImage[(int) Math.round(y)][x] = c;

@@ -86,8 +86,12 @@ public class AsciiShop {
                     throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
                 }
                 int width, height;
-                width = Integer.parseInt(token[1]);
-                height = Integer.parseInt(token[2]);
+                try {
+                    width = Integer.parseInt(token[1]);
+                    height = Integer.parseInt(token[2]);
+                } catch (NumberFormatException nfe) {
+                    throw new AsciiShopException(ERRORS.INPUT_ERROR.toString());
+                }
                 return new AsciiImageCreator(width, height);
             } else if ("load".equals(token[0])) {
                 if (token.length != 2) {
@@ -187,7 +191,7 @@ public class AsciiShop {
         }
     }
 
-    public static class AsciiImageLoader implements AsciiImageOperation<AsciiImage> {
+    public static class AsciiImageLoader implements AsciiImageOperation<Void> {
 
 
         private final String eof;
@@ -198,7 +202,7 @@ public class AsciiShop {
             this.scanner = input;
         }
 
-        public AsciiImage performTask(AsciiImage image) {
+        public Void performTask(AsciiImage image) {
 
             int width = image.getWidth();
             int height = image.getHeight();
@@ -221,7 +225,7 @@ public class AsciiShop {
             }
 
 
-            return image;
+            return null;
         }
     }
 
