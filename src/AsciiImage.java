@@ -7,50 +7,39 @@ import java.util.*;
 public class AsciiImage {
 
 
-    private static final char BACKGROUND_CHARACTER = '.';
+    private final List<Character> charset = new ArrayList<Character>();
+    private final String charsetAsString;
     //the ascii image as one whole char[][] without newline-characters
     private char[][] asciiImage;
 
-    /**
-     * creates a new, empty AsciiImage instance
-     */
 
-    public AsciiImage() {
-
+    public AsciiImage(AsciiImage img) {
+        this(img.getWidth(), img.getHeight(), img.getCharset());
     }
 
-    /**
-     * creates an AsciiImage from a String[]
-     *
-     * @param lines
-     */
-    public AsciiImage(String[] lines) {
-        this.asciiImage = new char[lines.length][];
-        for (int i = 0; i < lines.length; i++) {
-            this.asciiImage[i] = lines[i].toCharArray();
-        }
-
-    }
-
-    public AsciiImage(int width, int height) {
-        if (width <= 0 || height <= 0) {
-            throw new AsciiShop.AsciiShopException(AsciiShop.ERRORS.INPUT_ERROR.toString());
-        }
+    public AsciiImage(int width, int height, String charset) {
         this.asciiImage = new char[width][height];
+        for (char c : charset.toCharArray()) {
+            this.charset.add(c);
+        }
+        this.charsetAsString = charset;
         clear();
     }
 
-    public AsciiImage(AsciiImage img) {
-        this.asciiImage = img.asciiImage.clone();
-        for (int i = 0; i < asciiImage.length; i++) {
-            asciiImage[i] = img.asciiImage[i].clone();
-        }
+    public char getBackgroundCharacter() {
+        return charset.get(charset.size() - 1);
     }
+
+
+    public String getCharset() {
+        return charsetAsString;
+    }
+
 
     public void clear() {
 
         for (char[] anAsciiImage : this.asciiImage) {
-            Arrays.fill(anAsciiImage, BACKGROUND_CHARACTER);
+            Arrays.fill(anAsciiImage, getBackgroundCharacter());
         }
 
     }
@@ -65,12 +54,9 @@ public class AsciiImage {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        this.transpose();
         for (char[] anAsciiImage : this.asciiImage) {
             builder.append(anAsciiImage).append(System.getProperty("line.separator"));
         }
-
-        this.transpose();
         return builder.toString();
 
     }
@@ -81,11 +67,11 @@ public class AsciiImage {
      * @param x the x coordinate
      * @param y the y coordinate
      * @return the character on x/y
-     * @throws AsciiShop.AsciiShopException if x/y are out of the boundaries of this image
+     * @throws java.lang.IndexOutOfBoundsException if x/y are out of the boundaries of this image
      */
     public char getPixel(int x, int y) {
         if (isOutOfBoundaries(x, y)) {
-            throw new AsciiShop.AsciiShopException(AsciiShop.ERRORS.OPERATION_FAILED.toString());
+            throw getOutOfBoundsException(x, y);
         }
         return this.asciiImage[x][y];
     }
@@ -106,35 +92,23 @@ public class AsciiImage {
      * @param x
      * @param y
      * @param c
-     * @throws AsciiShop.AsciiShopException if x/y are out of the boundaries of this image
+     * @throws java.lang.IndexOutOfBoundsException if x/y are out of the boundaries of this image
      */
     public void setPixel(int x, int y, char c) {
         if (isOutOfBoundaries(x, y)) {
-            throw new AsciiShop.AsciiShopException(AsciiShop.ERRORS.OPERATION_FAILED.toString());
+            throw getOutOfBoundsException(x, y);
+        }
+        if (!charset.contains(c)) {
+            throw new IndexOutOfBoundsException(c + "is not in the charset " + charsetAsString);
         }
         this.asciiImage[x][y] = c;
     }
 
-    /**
-     * returns the centroid of the character c.
-     */
-    public AsciiPoint getCentroid(char c) {
-        Collection<AsciiPoint> points = getPointList(c);
-
-        if (points.isEmpty()) {
-            return null;
-        }
-
-        int amountOfPixels = points.size();
-        double sumX = 0;
-        double sumY = 0;
-        for (AsciiPoint point : points) {
-            sumX += point.getX();
-            sumY += point.getY();
-        }
-        return new AsciiPoint((int) Math.round(sumX / amountOfPixels), (int) Math.round(sumY / amountOfPixels));
-
+    private IndexOutOfBoundsException getOutOfBoundsException(int x, int y) {
+        return new IndexOutOfBoundsException("the pixel at " + x + "/" + y + " is out of the boundaries" +
+                "of this image (" + getWidth() + "/" + getHeight() + ")");
     }
+
 
 
     public void setPixel(AsciiPoint p, char c) {
@@ -145,81 +119,17 @@ public class AsciiImage {
         return x < 0 || y < 0 || x >= asciiImage.length || y >= asciiImage[0].length;
     }
 
-    /**
-     * replaces the character on position x/y with c, and recursively all neighbour characters
-     * which do not match c.
-     *
-     * @param x the x coordinate
-     * @param y the y coordinate
-     * @param c that character which should replace the old char at x/y
-     * @throws AsciiShop.AsciiShopException in case of invalid x/y
-     */
-    public void fill(int x, int y, char c) {
-        //check if this character already matches this character
-        // or throw exception in case of invalid x/y
-        if ((this.getPixel(x, y) == c)) {
-            //nothing to do
-            return;
-        }
-        //save the old character for later
-        char oldChar = this.getPixel(x, y);
-        //replace the char on position x/y with the desired character
-        this.setPixel(x, y, c);
-
-        //check all neighbours
-        Set<AsciiPoint> points = getNeighbors(x, y);
-        for (AsciiPoint point : points) {
-            if (getPixel(point) == oldChar) {
-                fill(point.getX(), point.getY(), c);
-            }
-        }
-
-    }
-
-    /**
-     * transposes the image.
-     */
-    public void transpose() {
-        //create a new asciiimage with the dimensions of the old image, but width and height swapped
-        AsciiImage help = new AsciiImage(this.getHeight(), this.getWidth());
-
-        //get the char on position x,y on the original image and set it on the new image on position y/x
-        for (int x = 0; x < this.getWidth(); x++) {
-            for (int y = 0; y < this.getHeight(); y++) {
-                help.setPixel(y, x, getPixel(x, y));
-            }
-        }
-        //take the state of the new image and copy it to new original image
-        this.asciiImage = help.asciiImage;
-
-
-    }
-
-    /**
-     * returns the lineIndex_th line. does not validate the input.
-     *
-     * @param lineIndex
-     * @return
-     * @throws java.lang.IndexOutOfBoundsException if lineIndex is not valid
-     */
+    /*
+         * returns the lineIndex_th line. does not validate the input.
+         *
+         * @param lineIndex
+         * @return
+         * @throws java.lang.IndexOutOfBoundsException if lineIndex is not valid
+         */
     private char[] getLine(int lineIndex) {
         return this.asciiImage[lineIndex];
     }
 
-
-    /**
-     * returns, if every line is this image is a palindrome.
-     *
-     * @return true/false
-     */
-    public boolean isSymmetricHorizontal() {
-        for (int i = 0; i < this.getHeight(); i++) {
-            if (!this.isLineHorizontal(i)) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     /**
      * returns, if the line at lineIndex is a palindrome
@@ -326,7 +236,7 @@ public class AsciiImage {
      * @param y the y coordinate
      * @return Set containing all neighbours of x/y. can contain up to 4 elements. can be empty.
      */
-    public Set<AsciiPoint> getNeighbors(int x, int y) {
+    public Set<AsciiPoint> get4Neighbors(int x, int y) {
 
         Set<AsciiPoint> points = new HashSet<AsciiPoint>();
         //check left neighbour
@@ -348,28 +258,41 @@ public class AsciiImage {
         return points;
     }
 
+
     /**
      * returns all neighbours of the given point.
      * @return Set containing all neighbours of the given point. can contain up to 4 elements. can be empty.
      */
-    public Set<AsciiPoint> getNeighbors(AsciiPoint point) {
-        return getNeighbors(point.getX(), point.getY());
+    public Set<AsciiPoint> get4Neighbors(AsciiPoint point) {
+        return get4Neighbors(point.getX(), point.getY());
     }
 
+    public Set<AsciiPoint> get8Neighbors(int x, int y) {
 
-    /**
-     * grows the region of all points with the character c. All characters, which are neighbours of any point containing
-     * c, which are set to BACKGROUND_CHARACTER, will be set to c.
-     * @param c
-     */
-    public void growRegion(char c) {
-        for (AsciiPoint point : getPointList(c)) {
-            for (AsciiPoint neighbour : getNeighbors(point)) {
-                if (getPixel(neighbour) == BACKGROUND_CHARACTER) {
-                    setPixel(neighbour, c);
-                }
-            }
+        Set<AsciiPoint> points = get4Neighbors(x, y);
+
+        if (x > 0 && y > 0) {
+            points.add(new AsciiPoint(x - 1, y - 1));
         }
+
+        if (x > 0 && y < getHeight() - 1) {
+            points.add(new AsciiPoint(x - 1, y + 1));
+        }
+
+        if (x < this.getWidth() - 1 && y < getHeight() - 1) {
+            points.add(new AsciiPoint(x + 1, y + 1));
+        }
+
+        if (x < this.getWidth() - 1 && y > 0) {
+            points.add(new AsciiPoint(x + 1, y - 1));
+        }
+
+        return points;
+
+    }
+
+    public Set<AsciiPoint> get8Neighbors(AsciiPoint p) {
+        return get8Neighbors(p.getX(), p.getY());
     }
 
 
