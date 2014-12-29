@@ -3,6 +3,14 @@
  */
 public class TransposeOperation implements Operation {
 
+    /**
+     * returns a new, transposed image
+     *
+     * @param img The AsciiImage to use as basis for executing the Operation, it will remain
+     *            unchanged
+     * @return a new, transposed image
+     * @throws OperationException
+     */
     public AsciiImage execute(AsciiImage img) throws OperationException {
         //create a new asciiimage with the dimensions of the old image, but width and height swapped
         AsciiImage newImage = new AsciiImage(img.getHeight(), img.getWidth(), img.getCharset());

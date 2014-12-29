@@ -6,10 +6,10 @@ import java.util.Scanner;
 public class AsciiShop {
 
 
-
     public static void main(String[] args) {
 
         try {
+            //reference to the currently active image
             AsciiImage image;
             AsciiStack stack = new AsciiStack();
             Scanner scanner = new Scanner(System.in);
@@ -17,7 +17,7 @@ public class AsciiShop {
             //initialise the image
             Operation operation = builder.buildOperation(scanner);
             if (!(operation instanceof CreateOperation)) {
-                throw new RuntimeException(ERRORS.INPUT_ERROR.toString());
+                throw new InputException();
             }
             image = ((CreateOperation) operation).execute(null);
 
@@ -27,7 +27,7 @@ public class AsciiShop {
                 operation = builder.buildOperation(scanner);
                 //image has already been created, must not be created again.
                 if (operation instanceof CreateOperation) {
-                    throw new RuntimeException(ERRORS.UNKNOWN_COMMAND.toString());
+                    throw new InputException();
                 }
                 //perform that operation on the image
                 AsciiImage operationResult = operation.execute(image);
@@ -40,6 +40,8 @@ public class AsciiShop {
         } catch (OperationException ase) {
             //print error message
             System.out.println(ase.getMessage());
+        } catch (InputException ip) {
+            System.out.println(ip.getMessage());
         }
     }
 
@@ -81,7 +83,7 @@ public class AsciiShop {
             String[] token = line.split(" ");
             if ("create".equals(token[0])) {
                 if (token.length != 4) {
-                    throw new RuntimeException(ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 int width, height;
                 String charset;
@@ -90,12 +92,12 @@ public class AsciiShop {
                     height = Integer.parseInt(token[2]);
                     charset = token[3];
                 } catch (NumberFormatException nfe) {
-                    throw new RuntimeException(ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 return new CreateOperation(width, height, charset);
             } else if ("load".equals(token[0])) {
                 if (token.length != 2) {
-                    throw new RuntimeException(ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 String eof = token[1];
                 String data = "";
@@ -110,7 +112,7 @@ public class AsciiShop {
                 return new ClearOperation();
             } else if ("replace".equals(token[0])) {
                 if (token.length != 3 && (token[1].length() != 1 || token[2].length() != 1)) {
-                    throw new RuntimeException(ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 char oldChar = token[1].charAt(0);
                 char newChar = token[2].charAt(0);
@@ -120,7 +122,7 @@ public class AsciiShop {
 
             } else if ("line".equals(token[0])) {
                 if (token.length != 6) {
-                    throw new RuntimeException(ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 int x0, y0, x1, y1;
                 char c;
@@ -132,23 +134,23 @@ public class AsciiShop {
                     x1 = Integer.parseInt(token[3]);
                     y1 = Integer.parseInt(token[4]);
                 } catch (NumberFormatException nfe) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 //c must be exactly one character
                 if (token[5].length() != 1) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 c = token[5].charAt(0);
                 return new LineOperation(x0, y0, x1, y1, c);
             }
             if ("transpose".equals(token[0])) {
                 if (token.length != 1) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 return new TransposeOperation();
             } else if ("fill".equals(token[0])) {
                 if (token.length != 4) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 //parameters for the fill command
                 int x, y;
@@ -159,32 +161,32 @@ public class AsciiShop {
                     x = Integer.parseInt(token[1]);
                     y = Integer.parseInt(token[2]);
                 } catch (NumberFormatException nfe) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 //c must be exactly one character
                 if (token[3].length() != 1) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 c = token[3].charAt(0);
                 return new FillOperation(x, y, c);
             } else if ("undo".equals(token[0])) {
                 if (token.length != 1) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 return new AsciiUndoOperation(stack);
             } else if ("grow".equals(token[0])) {
                 if (token.length != 2 && token[1].length() != 1) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 return new GrowRegionOperation(token[1].charAt(0));
             } else if ("filter".equals(token[0])) {
                 if (token.length != 2 || !token[1].equals("median")) {
-                    throw new RuntimeException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new InputException();
                 }
                 return new MedianOperation();
             } else {
                 //no valid command was given : throw anRuntimeException
-                throw new RuntimeException(ERRORS.UNKNOWN_COMMAND.toString());
+                throw new InputException(ERRORS.UNKNOWN_COMMAND.toString());
             }
         }
 
@@ -198,7 +200,7 @@ public class AsciiShop {
      */
     public static class AsciiPrintOperation implements Operation {
         public AsciiImage execute(AsciiImage image) throws OperationException {
-
+            //image must be transposed before it can be printed
             System.out.println(new TransposeOperation().execute(image));
             return image;
 
@@ -239,7 +241,10 @@ public class AsciiShop {
         }
     }
 
-
+    /**
+     * custom operation the create a new image
+     * Essentially a wrapper around the constructor.
+     */
     public static class CreateOperation implements Operation {
 
         private final int width, height;
@@ -252,6 +257,10 @@ public class AsciiShop {
 
         }
 
+        /**
+         * @param image must be null
+         * @return new AsciiImage
+         */
         public AsciiImage execute(AsciiImage image) {
 
             if (image != null) {
@@ -262,5 +271,21 @@ public class AsciiShop {
         }
 
     }
+
+    /**
+     * Created by mkamleithner on 12/28/14.
+     */
+    public static class InputException extends RuntimeException {
+
+        public InputException() {
+            this(AsciiShop.ERRORS.INPUT_ERROR.toString());
+        }
+
+        public InputException(String mesg) {
+            super(mesg);
+        }
+
+    }
+
 
 }

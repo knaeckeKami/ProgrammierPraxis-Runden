@@ -6,6 +6,13 @@ import java.util.Set;
  */
 public class MedianOperation implements Operation {
 
+    /**
+     * applies a median filter to the given image
+     *
+     * @param img The AsciiImage to use as basis for executing the Operation, it will remain
+     *            unchanged
+     * @return new median-filtered image.
+     */
     public AsciiImage execute(AsciiImage img) {
         final AsciiImage newImage = new AsciiImage(img);
         final String charset = newImage.getCharset();

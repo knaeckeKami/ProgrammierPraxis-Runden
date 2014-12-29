@@ -6,7 +6,18 @@ public class LineOperation implements Operation {
     private int x0, x1, y0, y1;
     private char c;
 
-    public LineOperation(int x0, int x1, int y0, int y1, char c) {
+    /**
+     * creates a new LineOperation, which
+     * will draw a line from the point x0/y0 to x1/y1 upon
+     * a call to the .execute() method.
+     *
+     * @param x0
+     * @param y0
+     * @param x1
+     * @param y1
+     * @param c
+     */
+    public LineOperation(int x0, int y0, int x1, int y1, char c) {
         this.x0 = x0;
         this.x1 = x1;
         this.y0 = y0;
@@ -14,6 +25,14 @@ public class LineOperation implements Operation {
         this.c = c;
     }
 
+    /**
+     * draws a line on the given image from x0/y0 to x1/y1 with the given
+     * character.
+     * @param img The AsciiImage to use as basis for executing the Operation, it will remain
+     *            unchanged
+     * @return the new image with the line drawn on it.
+     * @throws OperationException
+     */
     public AsciiImage execute(AsciiImage img) throws OperationException {
         AsciiImage newImage = new AsciiImage(img);
         boolean swapped = false;

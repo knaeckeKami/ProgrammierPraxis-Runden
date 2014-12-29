@@ -1,5 +1,6 @@
 /**
- * Created by mkamleithner on 11/29/14.
+ * Class, representing a point in an AsciiImage.
+ * Immutable.
  */
 public class AsciiPoint {
 

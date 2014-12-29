@@ -7,29 +7,46 @@ public class LoadOperation implements Operation {
 
     String data;
 
+    /**
+     * @param data the data of the AsciiImage which should be loaded.
+     *             Must be one String with newlines to indicate a new row
+     *             in the image.
+     */
     public LoadOperation(String data) {
         this.data = data;
     }
 
+    /**
+     * Sets the content of the given image to the string given
+     * in the constructor of this object.
+     * @param image
+     * @return
+     * @throws OperationException if the data was invalid.
+     * The data is considered invalid if it does not match the given
+     * width/height of the image or if not every line is equally long.
+     */
     public AsciiImage execute(AsciiImage image) throws OperationException {
+        try {
+            AsciiImage newImage = new AsciiImage(image);
+            int width = image.getWidth();
+            int height = image.getHeight();
+            Scanner scanner = new Scanner(data);
 
-        AsciiImage newImage = new AsciiImage(image);
-        int width = image.getWidth();
-        int height = image.getHeight();
-        Scanner scanner = new Scanner(data);
-
-        for (int i = 0; i < height; i++) {
-            if (!scanner.hasNextLine()) {
-                throw new IllegalArgumentException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+            for (int i = 0; i < height; i++) {
+                if (!scanner.hasNextLine()) {
+                    throw new IllegalArgumentException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                }
+                String line = scanner.nextLine();
+                if (line.length() != width) {
+                    throw new IllegalArgumentException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                }
+                for (int j = 0; j < line.length(); j++) {
+                    newImage.setPixel(j, i, line.charAt(j));
+                }
             }
-            String line = scanner.nextLine();
-            if (line.length() != width) {
-                throw new IllegalArgumentException(AsciiShop.ERRORS.INPUT_ERROR.toString());
-            }
-            for (int j = 0; j < line.length(); j++) {
-                newImage.setPixel(j, i, line.charAt(j));
-            }
+            return newImage;
+        } catch (IndexOutOfBoundsException e) {
+            throw new OperationException();
         }
-        return newImage;
     }
 }
