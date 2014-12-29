@@ -28,6 +28,7 @@ public class LineOperation implements Operation {
     /**
      * draws a line on the given image from x0/y0 to x1/y1 with the given
      * character.
+     *
      * @param img The AsciiImage to use as basis for executing the Operation, it will remain
      *            unchanged
      * @return the new image with the line drawn on it.

@@ -23,6 +23,7 @@ public class AsciiImage {
     /**
      * copy constructor.
      * Creates a new AsciiImage, which is a deep copy of the given one.
+     *
      * @param img the object to create a copy of
      */
     public AsciiImage(AsciiImage img) {
@@ -51,6 +52,7 @@ public class AsciiImage {
      * returns the  bachground-character of this image.
      * This is equal to accessing the last character of the
      * charset of this AsciiImage.
+     *
      * @return
      */
     public char getBackgroundCharacter() {
@@ -59,6 +61,7 @@ public class AsciiImage {
 
     /**
      * returns the charset of this AsciiImage.
+     *
      * @return
      */
     public String getCharset() {
@@ -76,6 +79,7 @@ public class AsciiImage {
 
     /**
      * returns the width of this image
+     *
      * @return
      */
     public int getWidth() {
@@ -84,6 +88,7 @@ public class AsciiImage {
 
     /**
      * returns the height of this image
+     *
      * @return
      */
     public int getHeight() {
@@ -92,6 +97,7 @@ public class AsciiImage {
 
     /**
      * returns a string represantation of this image
+     *
      * @return
      */
     public String toString() {
@@ -140,7 +146,7 @@ public class AsciiImage {
         if (isOutOfBoundaries(x, y)) {
             throw getOutOfBoundsException(x, y);
         }
-        if (charsetAsString.indexOf(c)==-1) {
+        if (charsetAsString.indexOf(c) == -1) {
             throw new IndexOutOfBoundsException(c + "is not in the charset " + charsetAsString);
         }
         this.asciiImage[x][y] = c;
@@ -149,6 +155,7 @@ public class AsciiImage {
     /**
      * returns an IndexOutOfBoundsException with an description,
      * why the given coordinates are not valid,
+     *
      * @param x
      * @param y
      * @return
@@ -161,6 +168,7 @@ public class AsciiImage {
 
     /**
      * sets the pixel at the given point to the given character
+     *
      * @param p
      * @param c
      * @throws java.lang.IndexOutOfBoundsException in case of an invalid point.
@@ -198,6 +206,7 @@ public class AsciiImage {
      * aaXaa
      * aaaaa
      * On a given point p, all points marked as X will be returned.
+     *
      * @param x the x coordinate
      * @param y the y coordinate
      * @return Set containing all neighbours of x/y. can contain up to 4 elements. can be empty.
@@ -227,6 +236,7 @@ public class AsciiImage {
 
     /**
      * returns all direct (not diagonal) neighbours of the given point.
+     *
      * @return Set containing all neighbours of the given point. can contain up to 4 elements. can be empty.
      */
     public Set<AsciiPoint> get4Neighbors(AsciiPoint point) {
@@ -241,6 +251,7 @@ public class AsciiImage {
      * aXXXa
      * aaaaa
      * On a given point p, all points marked as "X" will be returned
+     *
      * @param x
      * @param y
      * @return
@@ -277,6 +288,7 @@ public class AsciiImage {
      * aXXXa
      * aaaaa
      * On a given point p, all points marked as "X" will be returned
+     *
      * @param p AsciiPoint
      * @return set of neighbours
      */
