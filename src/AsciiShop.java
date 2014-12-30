@@ -1,4 +1,7 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by mkamleithner on 10/24/14.
@@ -9,6 +12,7 @@ public class AsciiShop {
     private static final AsciiStack stack = new AsciiStack();
 
     static {
+        MetricSet<AsciiImage> saved = new MetricSet<AsciiImage>();
         List<Factory> factoryList = new ArrayList<Factory>();
         /**
          * In case of implementing new commands, just
@@ -23,6 +27,9 @@ public class AsciiShop {
         factoryList.add(new CreateFactory());
         factoryList.add(new UndoFactory(stack));
         factoryList.add(new HistogramFactory());
+        factoryList.add(new SearchFactory(saved));
+        factoryList.add(new SaveFactory(saved));
+        factoryList.add(new PrintSavedFactory(saved));
 
         /**
          * here the factory-list gets converted to a HashMap
@@ -65,10 +72,6 @@ public class AsciiShop {
                     throw new InputException(ERRORS.UNKNOWN_COMMAND.toString());
                 }
                 operation = factory.create(scanner);
-                //image has already been created, must not be created again.
-                if (operation instanceof CreateOperation) {
-                    throw new InputException();
-                }
                 //perform that operation on the image
                 AsciiImage operationResult = operation.execute(image);
                 if (operationResult != image && !(operation instanceof AsciiUndoOperation)) {
@@ -154,36 +157,7 @@ public class AsciiShop {
         }
     }
 
-    /**
-     * custom operation the create a new image
-     * Essentially a wrapper around the constructor.
-     */
-    public static class CreateOperation implements Operation {
 
-        private final int width, height;
-        private String charset;
-
-        public CreateOperation(int width, int height, String charset) {
-            this.height = height;
-            this.width = width;
-            this.charset = charset;
-
-        }
-
-        /**
-         * @param image must be null
-         * @return new AsciiImage
-         */
-        public AsciiImage execute(AsciiImage image) {
-
-            if (image != null) {
-                return null;
-            }
-
-            return new AsciiImage(width, height, charset);
-        }
-
-    }
 
     /**
      * Created by mkamleithner on 12/28/14.
@@ -211,32 +185,6 @@ public class AsciiShop {
         }
     }
 
-    public static class CreateFactory implements Factory {
-
-        public Operation create(Scanner scanner) throws FactoryException {
-
-            int width, height;
-            String charset;
-            try {
-                width = scanner.nextInt();
-                height = scanner.nextInt();
-                charset = scanner.next();
-            } catch (NoSuchElementException nse) {
-                throw error();
-            }
-
-            return new CreateOperation(width, height, charset);
-        }
-
-        public String getKeyWord() {
-            return "create";
-        }
-
-        private FactoryException error() throws FactoryException {
-            return new FactoryException("illegal input!");
-        }
-
-    }
 
     public static class UndoFactory implements Factory {
 
@@ -270,6 +218,42 @@ public class AsciiShop {
         public AsciiImage execute(AsciiImage img) throws OperationException {
             new AsciiPrintOperation().execute(Histogram.getHistogram(img));
             return img;
+        }
+    }
+
+    public static class PrintSavedOperation implements Operation {
+
+        private MetricSet<AsciiImage> saved;
+
+        public PrintSavedOperation(MetricSet<AsciiImage> saved) {
+            this.saved = saved;
+        }
+
+        public AsciiImage execute(AsciiImage noParamNeeded) throws OperationException {
+            for (AsciiImage image : saved) {
+                new AsciiPrintOperation().execute(image);
+            }
+            if (saved.isEmpty()) {
+                System.out.println("NO SAVED IMAGES");
+            }
+            return noParamNeeded;
+        }
+    }
+
+    public static class PrintSavedFactory implements Factory {
+
+        private MetricSet<AsciiImage> saved;
+
+        public PrintSavedFactory(MetricSet<AsciiImage> saved) {
+            this.saved = saved;
+        }
+
+        public Operation create(Scanner scanner) throws FactoryException {
+            return new PrintSavedOperation(saved);
+        }
+
+        public String getKeyWord() {
+            return "printsaved";
         }
     }
 

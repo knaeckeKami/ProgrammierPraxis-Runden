@@ -296,5 +296,32 @@ public class AsciiImage {
         return get8Neighbors(p.getX(), p.getY());
     }
 
+    public int getUniqueChars() {
+        Set<Character> characters = new HashSet<Character>();
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                characters.add(getPixel(x, y));
+            }
+        }
+        return characters.size();
+
+    }
+
+    public boolean equals(Object other) {
+        if (other.getClass() != this.getClass()) {
+            return false;
+        }
+        AsciiImage otherImage = (AsciiImage) other;
+        if (this.getHeight() != otherImage.getHeight()) {
+            return false;
+        }
+        if (this.getWidth() != otherImage.getWidth()) {
+            return false;
+        }
+        return Arrays.deepEquals(this.asciiImage, otherImage.asciiImage);
+
+
+    }
+
 
 }
