@@ -66,17 +66,22 @@ public class AsciiShop {
 
             //read lines until no more lines are available
             while (scanner.hasNext()) {
-                //build operation-object from input-command
+                //get  factory-object from input-command
                 Factory factory = factories.get(scanner.next());
                 if (factory == null) {
                     throw new InputException(ERRORS.UNKNOWN_COMMAND.toString());
                 }
+                //build operation object
                 operation = factory.create(scanner);
                 //perform that operation on the image
                 AsciiImage operationResult = operation.execute(image);
-                if (operationResult != image && !(operation instanceof AsciiUndoOperation)) {
+                //look up, if the returned images an another image
+                //then the original image
+                //if so, save it on the stack (except the operation was the UndoOperation)
+                if (operationResult != image && !(operation instanceof UndoOperation)) {
                     stack.push(image);
                 }
+                //update the image
                 image = operationResult;
             }
 
@@ -126,13 +131,13 @@ public class AsciiShop {
 
 
     /**
-     * class to undo the previous operation. needs an asciistack on creation
+     * class to undo the previous operation. needs an AsciiStack on creation
      */
-    public static class AsciiUndoOperation implements Operation {
+    public static class UndoOperation implements Operation {
 
-        private AsciiStack stack;
+        private final AsciiStack stack;
 
-        public AsciiUndoOperation(AsciiStack stack) {
+        public UndoOperation(AsciiStack stack) {
             this.stack = stack;
         }
 
@@ -160,7 +165,8 @@ public class AsciiShop {
 
 
     /**
-     * Created by mkamleithner on 12/28/14.
+     * custom exception for some input errors, which fit in no other
+     * category (e.q. no input at all)
      */
     public static class InputException extends RuntimeException {
 
@@ -174,6 +180,9 @@ public class AsciiShop {
 
     }
 
+    /**
+     * custom factory for creating AsciiPrintOperations
+     */
     public static class PrintFactory implements Factory {
 
         public Operation create(Scanner scanner) throws FactoryException {
@@ -185,7 +194,9 @@ public class AsciiShop {
         }
     }
 
-
+    /**
+     * factory for generating AsciiUndoOperations
+     */
     public static class UndoFactory implements Factory {
 
         private AsciiStack stack;
@@ -195,7 +206,7 @@ public class AsciiShop {
         }
 
         public Operation create(Scanner scanner) throws FactoryException {
-            return new AsciiUndoOperation(stack);
+            return new UndoOperation(stack);
         }
 
         public String getKeyWord() {
@@ -203,6 +214,9 @@ public class AsciiShop {
         }
     }
 
+    /**
+     * factory for generating an histogram-operation
+     */
     public static class HistogramFactory implements Factory {
 
         public Operation create(Scanner scanner) throws FactoryException {
@@ -214,6 +228,9 @@ public class AsciiShop {
         }
     }
 
+    /**
+     * custom operation for printing a histogram of an AsciiImage
+     */
     public static class HistogramOperation implements Operation {
         public AsciiImage execute(AsciiImage img) throws OperationException {
             new AsciiPrintOperation().execute(Histogram.getHistogram(img));
@@ -221,8 +238,14 @@ public class AsciiShop {
         }
     }
 
+    /**
+     * custom operation for printing all saved AsciiImages
+     */
     public static class PrintSavedOperation implements Operation {
 
+        /**
+         * reference to the set of saved images
+         */
         private MetricSet<AsciiImage> saved;
 
         public PrintSavedOperation(MetricSet<AsciiImage> saved) {
@@ -230,12 +253,15 @@ public class AsciiShop {
         }
 
         public AsciiImage execute(AsciiImage noParamNeeded) throws OperationException {
+            //print all images
             for (AsciiImage image : saved) {
                 new AsciiPrintOperation().execute(image);
             }
+            //print error message
             if (saved.isEmpty()) {
                 System.out.println("NO SAVED IMAGES");
             }
+            //return the untouched original image
             return noParamNeeded;
         }
     }

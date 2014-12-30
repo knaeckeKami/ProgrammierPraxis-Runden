@@ -5,6 +5,15 @@ import java.util.Scanner;
  */
 public class FilterFactory implements Factory {
 
+    /**
+     * returns a filter operation, depending on the input of the user
+     * Currently, two operations are supported:
+     * median and average
+     *
+     * @param scanner
+     * @return
+     * @throws FactoryException
+     */
     public Operation create(Scanner scanner) throws FactoryException {
         if (!scanner.hasNext()) {
             throw new FactoryException();

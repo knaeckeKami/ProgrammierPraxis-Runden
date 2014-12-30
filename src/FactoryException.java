@@ -1,5 +1,5 @@
 /**
- * Created by mkamleithner on 12/29/14.
+ * Exception used for input errors in Factories.
  */
 public class FactoryException extends Exception {
 

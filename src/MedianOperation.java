@@ -5,7 +5,12 @@ import java.util.Arrays;
  */
 public class MedianOperation extends FilterOperation {
 
-
+    /**
+     * returns the median of the given int[]
+     *
+     * @param values values as int[]
+     * @return median
+     */
     @Override
     public int filter(int[] values) {
         Arrays.sort(values);

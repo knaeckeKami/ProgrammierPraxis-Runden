@@ -3,6 +3,14 @@ import java.util.Scanner;
 
 public class CreateFactory implements Factory {
 
+    /**
+     * returns an operation, which creates a new, empty AsciiImage.
+     * The boundaries and the charset are read from the given scanner.
+     *
+     * @param scanner
+     * @return
+     * @throws FactoryException
+     */
     public Operation create(Scanner scanner) throws FactoryException {
 
         int width, height;

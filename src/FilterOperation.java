@@ -5,6 +5,14 @@ import java.util.Set;
  */
 public abstract class FilterOperation implements Operation {
 
+    /**
+     * Applies a filter to the given image.
+     * The concrete filter is implemented in the concrete extending classes.
+     *
+     * @param img The AsciiImage to use as basis for executing the Operation, it will remain
+     *            unchanged
+     * @return new filtered image
+     */
     public AsciiImage execute(AsciiImage img) {
 
         final AsciiImage newImage = new AsciiImage(img);
@@ -38,6 +46,13 @@ public abstract class FilterOperation implements Operation {
 
     }
 
+    /**
+     * computes a value determined bei values in the given int[]
+     * this method is used to implement several filters with one base class.
+     *
+     * @param values
+     * @return
+     */
     public abstract int filter(int[] values);
 
 

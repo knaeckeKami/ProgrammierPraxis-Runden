@@ -42,7 +42,7 @@ public class Histogram {
         }
         //calculate the percentage, how often the most common char occurs
         double maxPercent = (maxValue * 1.0 / (image.getHeight() * image.getWidth()) * 100.0);
-        //scale the occurence of chars the pixels, round up using Math.ceil()
+        //scale the occurrence of chars the pixels, round up using Math.ceil()
         Map<Character, Integer> charPixelCountMap = new HashMap<Character, Integer>();
         for (Character c : charCountMap.keySet()) {
             charPixelCountMap.put(c, (int) Math.ceil(1.0 * DRAWABLE_HEIGHT * charCountMap.get(c) / maxValue));

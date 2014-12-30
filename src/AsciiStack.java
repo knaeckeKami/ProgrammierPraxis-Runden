@@ -5,14 +5,27 @@ public class AsciiStack {
 
     private AsciiStackNode head;
 
+    /**
+     * returns the current size of the stack
+     *
+     * @return
+     */
     public int size() {
         return empty() ? 0 : head.size();
     }
 
+    /**
+     * returns true iff the stack is empty, false otherwise.
+     * @return
+     */
     public boolean empty() {
         return head == null;
     }
 
+    /**
+     * pushes the given element on the stack
+     * @param image
+     */
     public void push(AsciiImage image) {
         AsciiStackNode node = new AsciiStackNode(image, null);
         if (empty()) {
@@ -21,6 +34,11 @@ public class AsciiStack {
 
     }
 
+    /**
+     * returns the topmost element and removes it from the stack.
+     * returns null if the stack is empty.
+     * @return
+     */
     public AsciiImage pop() {
         if (empty()) return null;
         if (this.size() == 1) {
@@ -41,6 +59,12 @@ public class AsciiStack {
         return image;
     }
 
+    /**
+     * like pop, but doest not remove the element.
+     * returns the topmost element.
+     * returns null if the stack is empty.
+     * @return
+     */
     public AsciiImage peek() {
         if (empty()) return null;
 
@@ -51,6 +75,10 @@ public class AsciiStack {
         return currentElement.image;
     }
 
+    /**
+     * internal class for the implementation of the stack.
+     * essentially a linked list
+     */
     private class AsciiStackNode {
 
         private AsciiImage image;

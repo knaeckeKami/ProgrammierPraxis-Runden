@@ -1,6 +1,7 @@
 /**
  * Class, representing a point in an AsciiImage.
  * Immutable.
+ * Encapsulates two integers.
  */
 public class AsciiPoint {
 
