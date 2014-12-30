@@ -6,13 +6,15 @@ import java.util.Scanner;
 public class FilterFactory implements Factory {
 
     public Operation create(Scanner scanner) throws FactoryException {
-        if (!scanner.hasNext("median\\s")) {
+        if (!scanner.hasNext()) {
             throw new FactoryException();
         }
-        if (!scanner.next().equals("median")) {
-            throw new FactoryException();
-        }
-        return new MedianOperation();
+        String filter = scanner.next();
+        if (filter.equals("median")) {
+            return new MedianOperation();
+        } else if (filter.equals("average")) {
+            return new AverageOperation();
+        } else throw new FactoryException();
 
     }
 
