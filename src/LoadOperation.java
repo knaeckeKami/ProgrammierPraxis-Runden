@@ -39,12 +39,12 @@ public class LoadOperation implements Operation {
 
             for (int i = 0; i < height; i++) {
                 if (!scanner.hasNextLine()) {
-                    throw new IllegalArgumentException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new OperationException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 String line = scanner.nextLine();
                 if (line.length() != width) {
                     System.out.println(line.length() + " " + width + " " + data);
-                    throw new IllegalArgumentException(AsciiShop.ERRORS.INPUT_ERROR.toString());
+                    throw new OperationException(AsciiShop.ERRORS.INPUT_ERROR.toString());
                 }
                 for (int j = 0; j < line.length(); j++) {
                     newImage.setPixel(j, i, line.charAt(j));

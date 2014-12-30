@@ -22,6 +22,7 @@ public class AsciiShop {
         factoryList.add(new PrintFactory());
         factoryList.add(new CreateFactory());
         factoryList.add(new UndoFactory(stack));
+        factoryList.add(new HistogramFactory());
 
         /**
          * here the factory-list gets converted to a HashMap
@@ -46,8 +47,9 @@ public class AsciiShop {
             if (!scanner.hasNext()) {
                 throw new InputException();
             }
-            CreateFactory cf = (CreateFactory) factories.get(scanner.next());
-            if (cf == null) {
+
+            Factory cf = factories.get(scanner.next());
+            if (cf == null || !(cf instanceof CreateFactory)) {
                 throw new InputException(ERRORS.INPUT_ERROR.toString());
             }
             CreateOperation co = (CreateOperation) cf.create(scanner);
@@ -56,7 +58,7 @@ public class AsciiShop {
             Operation operation;
 
             //read lines until no more lines are available
-            while (scanner.hasNextLine()) {
+            while (scanner.hasNext()) {
                 //build operation-object from input-command
                 Factory factory = factories.get(scanner.next());
                 if (factory == null) {
@@ -80,7 +82,6 @@ public class AsciiShop {
             System.out.println(ase.getMessage());
         } catch (InputException ip) {
             System.out.println(ip.getMessage());
-            ip.printStackTrace();
         } catch (FactoryException f) {
             System.out.println(f.getMessage());
         }
@@ -251,6 +252,24 @@ public class AsciiShop {
 
         public String getKeyWord() {
             return "undo";
+        }
+    }
+
+    public static class HistogramFactory implements Factory {
+
+        public Operation create(Scanner scanner) throws FactoryException {
+            return new HistogramOperation();
+        }
+
+        public String getKeyWord() {
+            return "histogram";
+        }
+    }
+
+    public static class HistogramOperation implements Operation {
+        public AsciiImage execute(AsciiImage img) throws OperationException {
+            new AsciiPrintOperation().execute(Histogram.getHistogram(img));
+            return img;
         }
     }
 

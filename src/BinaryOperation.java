@@ -3,10 +3,10 @@
  */
 public class BinaryOperation implements Operation {
 
-    private char treshold;
+    private char threshold;
 
-    public BinaryOperation(char treshold) {
-        this.treshold = treshold;
+    public BinaryOperation(char threshold) {
+        this.threshold = threshold;
     }
 
     public AsciiImage execute(AsciiImage img) throws OperationException {
@@ -14,13 +14,13 @@ public class BinaryOperation implements Operation {
         String charset = newImage.getCharset();
         char brightestChar = newImage.getBackgroundCharacter();
         char darkestChar = charset.charAt(0);
-        int indexOfTreshold = charset.indexOf(treshold);
-        if (indexOfTreshold == -1) {
+        int indexOfThreshold = charset.indexOf(threshold);
+        if (indexOfThreshold == -1) {
             throw new OperationException();
         }
         for (int x = 0; x < newImage.getWidth(); x++) {
             for (int y = 0; y < newImage.getHeight(); y++) {
-                if (charset.indexOf(newImage.getPixel(x, y)) < indexOfTreshold) {
+                if (charset.indexOf(newImage.getPixel(x, y)) < indexOfThreshold) {
                     newImage.setPixel(x, y, darkestChar);
                 } else {
                     newImage.setPixel(x, y, brightestChar);
