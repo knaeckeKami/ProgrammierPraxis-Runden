@@ -11,7 +11,16 @@ public class SearchFactory implements Factory {
         this.saved = saved;
     }
 
-    public Operation create(Scanner scanner) throws FactoryException {
+    /**
+     * Returns a SearchOperation. Which metric is used, is determined by the String read
+     * from the scanner.
+     * 2 Metrics are supported: "pixelcount" and "uniquechars".
+     *
+     * @param scanner, reads "pixelcount" or "uniquechars"
+     * @return SearchOperation
+     * @throws FactoryException if an invalid metric is read by the scanner
+     */
+    public SearchOperation create(Scanner scanner) throws FactoryException {
         if (!scanner.hasNext()) {
             throw new FactoryException();
         }

@@ -2,6 +2,7 @@
  * Created by mkamleithner on 12/30/14.
  */
 public class PixelCountMetric implements Metric<AsciiImage> {
+
     private static int size(AsciiImage img) {
         return img.getWidth() * img.getHeight();
     }

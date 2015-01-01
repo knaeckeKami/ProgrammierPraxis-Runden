@@ -296,6 +296,11 @@ public class AsciiImage {
         return get8Neighbors(p.getX(), p.getY());
     }
 
+    /**
+     * returns the number of unique chars in this image.
+     *
+     * @return
+     */
     public int getUniqueChars() {
         Set<Character> characters = new HashSet<Character>();
         for (int y = 0; y < getHeight(); y++) {

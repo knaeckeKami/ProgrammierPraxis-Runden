@@ -5,7 +5,15 @@ import java.util.Scanner;
  */
 public class BinaryFactory implements Factory {
 
-    public Operation create(Scanner scanner) throws FactoryException {
+    /**
+     * returns a BinaryOperation
+     *
+     * @param scanner reads a single char, which will be the threshold for
+     *                the BinaryOperation
+     * @return
+     * @throws FactoryException
+     */
+    public BinaryOperation create(Scanner scanner) throws FactoryException {
         char threshold;
         if (!scanner.hasNext()) {
             throw new FactoryException();
