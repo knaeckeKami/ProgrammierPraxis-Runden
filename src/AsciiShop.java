@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by mkamleithner on 10/24/14.
@@ -10,6 +7,7 @@ public class AsciiShop {
 
     private static final HashMap<String, Factory> factories = new HashMap<String, Factory>();
     private static final AsciiStack stack = new AsciiStack();
+    private static final Set<Class<? extends Operation>> undoableOperations = new HashSet<Class<? extends Operation>>();
 
     static {
         MetricSet<AsciiImage> saved = new MetricSet<AsciiImage>();
@@ -31,6 +29,7 @@ public class AsciiShop {
         factoryList.add(new SaveFactory(saved));
         factoryList.add(new PrintSavedFactory(saved));
 
+
         /**
          * here the factory-list gets converted to a HashMap
          * with the KeyWord as key.
@@ -41,6 +40,18 @@ public class AsciiShop {
         for (Factory factory : factoryList) {
             factories.put(factory.getKeyWord(), factory);
         }
+
+        /**
+         * build list of undoable operations
+         */
+        undoableOperations.add(BinaryOperation.class);
+        undoableOperations.add(ClearOperation.class);
+        undoableOperations.add(FillOperation.class);
+        undoableOperations.add(LineOperation.class);
+        undoableOperations.add(ReplaceOperation.class);
+        undoableOperations.add(TransposeOperation.class);
+        undoableOperations.add(MedianOperation.class);
+        undoableOperations.add(AverageOperation.class);
     }
 
 
@@ -75,12 +86,11 @@ public class AsciiShop {
                 operation = factory.create(scanner);
                 //perform that operation on the image
                 AsciiImage operationResult = operation.execute(image);
-                //look up, if the returned images an another image
-                //then the original image
-                //if so, save it on the stack (except the operation was the UndoOperation)
-                if (operationResult != image && !(operation instanceof UndoOperation)) {
+                // if the operation can be undone, save the old image on the stack
+                if (undoableOperations.contains(operation.getClass())) {
                     stack.push(image);
                 }
+
                 //update the image
                 image = operationResult;
             }
@@ -153,7 +163,7 @@ public class AsciiShop {
         public AsciiImage execute(AsciiImage image) {
             if (stack.empty()) {
                 System.out.println("STACK EMPTY");
-                return null;
+                return image;
             } else {
                 AsciiImage poppedImage = stack.pop();
                 return poppedImage;
@@ -268,7 +278,7 @@ public class AsciiShop {
 
     public static class PrintSavedFactory implements Factory {
 
-        private MetricSet<AsciiImage> saved;
+        private final MetricSet<AsciiImage> saved;
 
         public PrintSavedFactory(MetricSet<AsciiImage> saved) {
             this.saved = saved;
